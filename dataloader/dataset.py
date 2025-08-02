@@ -17,7 +17,8 @@ class SemKITTI(data.Dataset):
     def __init__(self, data_config_path, data_path, imageset='train', return_ref=False, residual=1,
                  residual_path=None, drop_few_static_frames=True):
         self.return_ref = return_ref
-        with open(data_config_path, 'r') as stream:
+        # Load YAML with UTF‑8 decoding
+        with open(data_config_path, 'r', encoding='utf-8') as stream:
             semkittiyaml = yaml.safe_load(stream)
         self.learning_map = semkittiyaml['learning_map']
         self.imageset = imageset
@@ -52,7 +53,8 @@ class SemKITTI(data.Dataset):
         scan_files = []
         residual_files = []
         for seq in self.split:
-            seq = '{0:02d}'.format(int(seq))
+            if seq.isdigit():
+                seq = '{0:02d}'.format(int(seq))
             scan_files += self.scan_files[seq]
             if self.residual > 0:
                 residual_files += self.residual_files[seq]
@@ -426,8 +428,11 @@ def collate_fn_BEV_test(data):
 
 
 # load Semantic KITTI class info
-def get_SemKITTI_label_name(label_mapping):  #
-    with open(label_mapping, 'r') as stream:
+# def get_SemKITTI_label_name(label_mapping):  #
+#     with open(label_mapping, 'r') as stream:
+#         semkittiyaml = yaml.safe_load(stream)
+def get_JRDB_label_name(config_path):
+    with open(config_path, 'r', encoding='utf-8') as stream:
         semkittiyaml = yaml.safe_load(stream)
     SemKITTI_label_name = dict()
     inv_learning_map = semkittiyaml['learning_map_inv']

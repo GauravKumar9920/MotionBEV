@@ -6,10 +6,10 @@ num_last_n: 4
 
 # Inputs
 # the folder of raw LiDAR scans
-scan_folder: '/home/ubuntu/xjp/data/KITTI/'
+scan_folder: '/scratch/gaurav_kumar/motionbev-project/Semantic_Kitti/dataset/'
 
 # Outputs
-residual_image_folder: '/home/ubuntu/xjp/data/mos/residual-polar-sequential-480-360/'
+residual_image_folder: '/scratch/gaurav_kumar/motionbev-project/mos/residual-polar-sequential-480-360/'
 
 occlusion_block: True
 

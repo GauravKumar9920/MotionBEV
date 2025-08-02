@@ -1,0 +1,56 @@
+# Config format schema number
+format_version: 4
+
+###################
+## Model options
+model_params:
+  grid_size:            # [W, H, Z] in BEV voxels
+    - 480               # ~80 m range @ 0.167 m/voxel (same as KITTI)
+    - 360
+    - 32
+  fea_dim: 9
+  ppmodel_init_dim: 32
+  use_norm: True
+  dropout: 0.5
+  use_co_attention: True         # keep the dual-frame co-attention gate
+
+###################
+## Data-loader options (JRDB)
+data_loader:
+  # **IMPORTANT**: replace <your_root> with the real root of the JRDB tree.
+  data_path:          "/scratch/aadith_warrier/JRDB/"        # raw dataset root
+  return_ref: True
+  # Polar residual volumes you will pre-compute with tools/create_residual.py
+  residual: 8                                                 # same as MotionBEV
+  residual_path:     "/scratch/aadith_warrier/JRDB_residual/" # create this
+  pose_path:         "/scratch/aadith_warrier/JRDB/poses/"    # *_poses_kitti.txt
+  calib_yaml:        "/scratch/aadith_warrier/JRDB/calibration/lidars.yaml"
+
+  batch_size: 8
+  shuffle:    True
+  num_workers: 4
+  drop_few_static_frames: True  # same speed/accuracy trade-off
+
+  # JRDB specifics
+  dataset_type: "polar"         # use polar BEV projection
+  ignore_label: 255             # background / “unknown”
+  fixed_volume_space: True      # crop to ±40 m forward, ±30 m sides, 4 m height
+
+  rotate_aug:   True
+  flip_aug:     True
+  transform_aug: True           # global scaling & translation
+
+###################
+## Training params
+train_params:
+  name: "MotionBEV_JRDB"
+  model_load_path: ""           # leave empty to train from scratch
+  checkpoint_every_n_steps: 500
+  max_num_epochs: 100
+  eval_every_n_steps: 1000      # ~1 eval/epoch if batch 8
+  learning_rate: 0.01
+  optimizer:  "SGD"
+  weight_decay: 0.0001
+  momentum: 0.9
+  wup_epochs: 1                 # warm-up
+  lr_decay:  0.95

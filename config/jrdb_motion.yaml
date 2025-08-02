@@ -1,0 +1,117 @@
+format_version: 4
+
+###################
+## Model (unchanged)
+model_params:
+  grid_size: [480, 360, 32]
+  fea_dim: 9
+  ppmodel_init_dim: 32
+  use_norm: True
+  dropout: 0.0                  # turn off dropout at test time
+  use_co_attention: True
+
+###################
+## Data-loader: JRDB val/test split
+data_loader:
+  data_path:        "/scratch/aadith_warrier/JRDB/"
+  residual: 8
+  residual_path:    "/scratch/aadith_warrier/JRDB_residual/"
+  pose_path:        "/scratch/aadith_warrier/JRDB/poses/"
+  calib_yaml:       "/scratch/aadith_warrier/JRDB/calibration/lidars.yaml"
+
+  split_file:       "config/jrdb_split.txt"        # master list with train / val / test
+  return_ref:       True                           # JRDB loader needs this flag
+  batch_size: 4
+  shuffle:    False
+  num_workers: 4
+  drop_few_static_frames: False
+
+  dataset_type: "polar"
+  ignore_label: 255
+  fixed_volume_space: True
+
+  # **No heavy augmentation during evaluation**
+  rotate_aug:   False
+  flip_aug:     False
+  transform_aug: False
+
+###################
+## Eval / Finetune params
+train_params:
+  name: "MotionBEV_JRDB_Eval"
+  model_load_path: "/scratch/gaurav_kumar/motionbev-project/models/MotionBEV_JRDB.pt"
+  max_num_epochs:  5            # tiny finetune / or set 0 for pure inference
+  eval_every_n_steps: 100
+  learning_rate: 0.001
+  optimizer:  "AdamW"
+  weight_decay: 0.0
+  wup_epochs: 0
+  lr_decay: 1.0                 # keep LR fixed
+# JRDB label mappings
+learning_map:
+  0: 0    # unlabeled -> static
+  1: 0    # outlier -> static  
+  9: 0    # static -> static
+  251: 1  # moving-car -> moving
+  252: 1  # moving-bicyclist -> moving
+  253: 1  # moving-person -> moving
+  254: 1  # moving-motorcyclist -> moving
+  255: 0  # ignore/background -> static
+
+learning_map_inv:
+  0: 9    # static
+  1: 251  # moving
+
+labels:
+  0: "unlabeled"
+  1: "outlier"
+  9: "static"
+  251: "moving-car"
+  252: "moving-bicyclist"
+  253: "moving-person"
+  254: "moving-motorcyclist"
+  255: "ignore"
+
+color_map:
+  0: [0, 0, 0]
+  1: [0, 0, 0]
+  9: [112, 128, 144]
+  251: [220, 20, 60]
+  252: [119, 11, 32]
+  253: [0, 0, 142]
+  254: [0, 0, 230]
+  255: [0, 0, 0]
+
+###################
+## Train/Val/Test sequence lists for SemKITTI‑style loader
+split:
+  train:
+    - bytes-cafe-2019-02-07_0
+    - clark-center-2019-02-28_0
+    - forbes-cafe-2019-01-22_0
+    - gates-159-group-meeting-2019-04-03_0
+    - gates-to-clark-2019-02-28_1
+    - huang-2-2019-01-25_0
+    - meyer-green-2019-03-16_0
+    - nvidia-aud-2019-04-18_0
+    - packard-poster-session-2019-03-20_2
+    - stlc-111-2019-04-19_0
+    - svl-meeting-gates-2-2019-04-08_0
+    - svl-meeting-gates-2-2019-04-08_1
+    - tressider-2019-03-16_0
+    - tressider-2019-03-16_1
+  val:
+    - clark-center-intersection-2019-02-28_0
+    - gates-ai-lab-2019-02-08_0
+    - huang-lane-2019-02-12_0
+    - memorial-court-2019-03-16_0
+    - packard-poster-session-2019-03-20_0
+    - packard-poster-session-2019-03-20_1
+    - tressider-2019-04-26_2
+  test:
+    - clark-center-2019-02-28_1
+    - cubberly-auditorium-2019-04-22_0
+    - gates-basement-elevators-2019-01-17_1
+    - hewlett-packard-intersection-2019-01-24_0
+    - jordan-hall-2019-04-22_0
+    - huang-basement-2019-01-25_0

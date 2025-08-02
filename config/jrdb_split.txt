@@ -1,0 +1,35 @@
+
+
+# JRDB master split list: <split> <sequence_id>
+# ---------------- Validation ----------------
+val clark-center-intersection-2019-02-28_0
+val gates-ai-lab-2019-02-08_0
+val huang-lane-2019-02-12_0
+val memorial-court-2019-03-16_0
+val packard-poster-session-2019-03-20_0
+val packard-poster-session-2019-03-20_1
+val tressider-2019-04-26_2
+
+# ---------------- Training ----------------
+train bytes-cafe-2019-02-07_0
+train clark-center-2019-02-28_0
+train forbes-cafe-2019-01-22_0
+train gates-159-group-meeting-2019-04-03_0
+train gates-to-clark-2019-02-28_1
+train huang-2-2019-01-25_0
+train meyer-green-2019-03-16_0
+train nvidia-aud-2019-04-18_0
+train packard-poster-session-2019-03-20_2
+train stlc-111-2019-04-19_0
+train svl-meeting-gates-2-2019-04-08_0
+train svl-meeting-gates-2-2019-04-08_1
+train tressider-2019-03-16_0
+train tressider-2019-03-16_1
+
+# ---------------- Test ----------------
+test clark-center-2019-02-28_1
+test cubberly-auditorium-2019-04-22_0
+test gates-basement-elevators-2019-01-17_1
+test hewlett-packard-intersection-2019-01-24_0
+test jordan-hall-2019-04-22_0
+test huang-basement-2019-01-25_0

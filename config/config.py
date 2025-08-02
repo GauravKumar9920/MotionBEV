@@ -23,6 +23,8 @@ data_loader = Map(
         "return_ref": Bool(),
         "residual": Int(),
         "residual_path": Str(),
+        "pose_path": Str(),
+        "calib_yaml": Str(),
         "batch_size": Int(),
         "shuffle": Bool(),
         "drop_few_static_frames": Bool(),
@@ -65,7 +67,7 @@ SCHEMA_FORMAT_VERSION_TO_SCHEMA = {4: schema_v4}
 
 
 def load_config_data(path: str) -> dict:
-    yaml_string = Path(path).read_text()
+    yaml_string = Path(path).read_text(encoding="utf-8")
     cfg_without_schema = load(yaml_string, schema=None)
     schema_version = int(cfg_without_schema["format_version"])
     if schema_version not in SCHEMA_FORMAT_VERSION_TO_SCHEMA:
