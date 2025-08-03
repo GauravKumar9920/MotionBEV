@@ -198,7 +198,7 @@ class voxel_dataset(data.Dataset):
         intervals = crop_range / (cur_grid_size - 1)
         if (intervals == 0).any(): print("Zero interval!")
 
-        grid_ind = (np.floor((np.clip(xyz, min_bound, max_bound) - min_bound) / intervals)).astype(np.int)
+        grid_ind = (np.floor((np.clip(xyz_pol, min_bound, max_bound) - min_bound) / intervals)).astype(int)
 
         # process voxel position
         voxel_position = np.zeros(self.grid_size, dtype=np.float32)
@@ -337,7 +337,7 @@ class spherical_dataset(data.Dataset):
         # 得到每一个点对应的voxel的索引[rho_idx, theta_yaw, pitch_idx]
         # Clip (limit) the values in an array.
         # np.floor向下取整
-        grid_ind = (np.floor((np.clip(xyz_pol, min_bound, max_bound) - min_bound) / intervals)).astype(np.int)
+        grid_ind = (np.floor((np.clip(xyz_pol, min_bound, max_bound) - min_bound) / intervals)).astype(int)
 
         # process labels
         self.ignore_label = 255

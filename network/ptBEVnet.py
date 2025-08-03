@@ -8,7 +8,7 @@ import torch_scatter
 class ptBEVnet(nn.Module):
 
     def __init__(self, BEV_net, grid_size, fea_dim=3, kernal_size=3,
-                 ppmodel_init_dim=32, fea_compre=None):
+                 ppmodel_init_dim=32, fea_compre=None, residual_ch=0):
         super(ptBEVnet, self).__init__()
 
         self.fea_dim = fea_dim
@@ -19,6 +19,8 @@ class ptBEVnet(nn.Module):
         self.BEV_model = BEV_net
         self.fea_compre = fea_compre
         self.grid_size = grid_size
+        # Number of residual channels to provide to BEV model
+        self.residual_ch = residual_ch
 
         # NN stuff
         if kernal_size != 1:
@@ -67,7 +69,6 @@ class ptBEVnet(nn.Module):
 
         # 把index相同的輸入相加  https://pytorch-scatter.readthedocs.io/en/latest/functions/scatter.html
         pooled_data = torch_scatter.scatter_max(processed_cat_pt_fea, unq_inv, dim=0)[0]
-        pooled_res_data = torch_scatter.scatter_max(cat_pt_res_fea, unq_inv, dim=0)[0]  # scatter_mean
 
         if self.fea_compre:
             processed_pooled_data = self.fea_compression(pooled_data)
@@ -75,17 +76,27 @@ class ptBEVnet(nn.Module):
             processed_pooled_data = pooled_data
 
         # stuff pooled data into 4D tensor
-        out_data_dim = [len(pt_fea), self.grid_size[0], self.grid_size[1], self.pt_fea_dim]  # 4, 480, 360, 32
+        out_data_dim = [len(pt_fea), self.grid_size[0], self.grid_size[1], self.pt_fea_dim]
         out_data = torch.zeros(out_data_dim, dtype=torch.float32).to(cur_dev)
-        out_data[unq[:, 0], unq[:, 1], unq[:, 2], :] = processed_pooled_data  # 给每一格赋值
-        out_data = out_data.permute(0, 3, 1, 2)  # 维度 0,1,2,3 -> 0,3,1,2  即4, 32, 480, 360
-        if self.local_pool_op != None:
+        out_data[unq[:, 0], unq[:, 1], unq[:, 2], :] = processed_pooled_data
+        out_data = out_data.permute(0, 3, 1, 2)
+        if self.local_pool_op is not None:
             out_data = self.local_pool_op(out_data)
 
-        res_data_dim = [len(pt_fea), self.grid_size[0], self.grid_size[1], cat_pt_res_fea.shape[1]]  # 4, 480, 360, 1
-        res_data = torch.zeros(res_data_dim, dtype=torch.float32).to(cur_dev)
-        res_data[unq[:, 0], unq[:, 1], unq[:, 2], :] = pooled_res_data  # 给每一格赋值
-        res_data = res_data.permute(0, 3, 1, 2)  # 维度 0,1,2,3 -> 0,3,1,2  即4, 1, 480, 360
+        # Handle residual features if present
+        if cat_pt_res_fea.size(1) > 0:
+            pooled_res_data = torch_scatter.scatter_max(cat_pt_res_fea, unq_inv, dim=0)[0]
+            # Build residual volume [batch, W, H, C_res]
+            res_data_dim = [len(pt_fea), self.grid_size[0], self.grid_size[1], cat_pt_res_fea.size(1)]
+            res_data = torch.zeros(res_data_dim, dtype=torch.float32, device=cur_dev)
+            res_data[unq[:, 0], unq[:, 1], unq[:, 2], :] = pooled_res_data
+            # Permute to [batch, C_res, W, H]
+            res_data = res_data.permute(0, 3, 1, 2)
+        else:
+            # No per‐point residual features: allocate zeros matching BEV_model’s expected residual channels
+            res_ch = self.residual_ch
+            res_data = torch.zeros((len(pt_fea), res_ch, self.grid_size[0], self.grid_size[1]),
+                                   dtype=torch.float32, device=cur_dev)
 
         # run through network
         net_return_voxel_data = self.BEV_model(
@@ -102,6 +113,7 @@ class PPmodel_in(nn.Module):
     def __init__(self, fea_dim=9, init_dim=32):
         super(PPmodel_in, self).__init__()
         self.bn1 = nn.BatchNorm1d(fea_dim)
+        print(f"[PPmodel_in] Initialized BN1 with num_features={fea_dim}")
 
         self.layer1 = nn.Sequential(
             nn.Linear(fea_dim, init_dim),
@@ -124,6 +136,7 @@ class PPmodel_in(nn.Module):
         self.out = nn.Linear(init_dim * 4, init_dim * 8)
 
     def forward(self, pt_fea):
+        print(f"[PPmodel_in] pt_fea.shape = {pt_fea.shape}")
         pt_fea = self.bn1(pt_fea)
         pt_fea1 = self.layer1(pt_fea)
         pt_fea2 = self.layer2(pt_fea1)

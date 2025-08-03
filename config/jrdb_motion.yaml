@@ -23,7 +23,7 @@ data_loader:
   return_ref:       True                           # JRDB loader needs this flag
   batch_size: 4
   shuffle:    False
-  num_workers: 4
+  num_workers: 2
   drop_few_static_frames: False
 
   dataset_type: "polar"

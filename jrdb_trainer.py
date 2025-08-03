@@ -43,6 +43,9 @@ from utils.lovasz_losses import lovasz_softmax
 from utils.log_util import get_logger, make_log_dir
 from config.config import load_config_data
 from utils.warmupLR import warmupLR
+import torch.multiprocessing as mp
+mp.set_sharing_strategy('file_system')
+mp.set_start_method('spawn', force=True)
 
 # ────────────────────────────────────────────────────────────────────────────────
 
@@ -85,7 +88,7 @@ def train(arch_cfg_path: str, data_cfg_path: str):
     unique_label, unique_label_str, _ = get_JRDB_label_name(data_cfg_path)
 
     if data_cfg["dataset_type"] == "polar":
-        fea_dim, circular_padding = 9, True
+        fea_dim, circular_padding = 8, True
     elif data_cfg["dataset_type"] == "traditional":
         fea_dim, circular_padding = 7, False
     else:
@@ -163,6 +166,7 @@ def train(arch_cfg_path: str, data_cfg_path: str):
         ppmodel_init_dim=model_cfg["ppmodel_init_dim"],
         kernal_size=1,
         fea_compre=fea_compre,
+        residual_ch=data_cfg["residual"],
     ).to(device)
 
     # load pretrained weights if specified
